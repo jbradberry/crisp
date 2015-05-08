@@ -1,6 +1,7 @@
 import sys
 from rpython.rlib.streamio import open_file_as_stream
 from rpython.jit.codewriter.policy import JitPolicy
+from crisp.interpreter import interpret
 
 
 def main(argv):
@@ -10,7 +11,7 @@ def main(argv):
     f = open_file_as_stream(argv[1])
     data = f.readall()
     f.close()
-    print data
+    interpret(data)
     return 0
 
 
