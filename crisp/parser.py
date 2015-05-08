@@ -15,7 +15,7 @@ class Atom(Node):
     def __init__(self, value):
         self.value = value
 
-    def __repr__(self):
+    def render(self):
         return "Atom('%s')" % self.value
 
 
@@ -23,8 +23,9 @@ class List(Node):
     def __init__(self, children):
         self.children = children
 
-    def __repr__(self):
-        return "List(%s)" % (','.join(self.children))
+    def render(self):
+        values = [node.render() for node in self.children]
+        return "List(%s)" % (','.join(values))
 
 
 def build_ast(tokens):
