@@ -25,7 +25,7 @@ class List(Node):
 
     def render(self):
         values = [node.render() for node in self.children]
-        return "List(%s)" % (','.join(values))
+        return "List(%s)" % (', '.join(values))
 
 
 def build_ast(tokens):
