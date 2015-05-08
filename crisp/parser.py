@@ -11,12 +11,44 @@ class Node(object):
     pass
 
 
-class Atom(Node):
+class Int(Node):
     def __init__(self, value):
         self.value = value
 
     def render(self):
-        return "Atom('%s')" % self.value
+        return "Int(%d)" % self.value
+
+
+class Float(Node):
+    def __init__(self, value):
+        self.value = value
+
+    def render(self):
+        return "Float(%f)" % self.value
+
+
+class Symbol(Node):
+    def __init__(self, value):
+        self.value = value
+
+    def render(self):
+        return "Symbol(%s)" % self.value
+
+
+def dispatch_atom(value):
+    try:
+        int_value = int(value)
+        return Int(int_value)
+    except:
+        pass
+
+    try:
+        float_value = float(value)
+        return Float(float_value)
+    except:
+        pass
+
+    return Symbol(value)
 
 
 class List(Node):
@@ -41,7 +73,7 @@ def build_ast(tokens):
     elif token == ')':
         raise SyntaxError('unexpected )')
     else:
-        return Atom(token)
+        return dispatch_atom(token)
 
 
 def parse(program):
