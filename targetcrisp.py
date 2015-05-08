@@ -4,7 +4,13 @@ from rpython.jit.codewriter.policy import JitPolicy
 
 
 def main(argv):
-    print "Hello, world!"
+    if not len(argv) == 2:
+        return 1
+
+    f = open_file_as_stream(argv[1])
+    data = f.readall()
+    f.close()
+    print data
     return 0
 
 
