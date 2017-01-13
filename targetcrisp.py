@@ -19,7 +19,7 @@ def target(driver, args):
     return main, None
 
 
-def jitpolity(driver):
+def jitpolicy(driver):
     return JitPolicy()
 
 
