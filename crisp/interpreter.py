@@ -1,5 +1,6 @@
-from . import parser
+from . import lexer, parser
 
 
 def interpret(program):
-    print parser.parse(program).render()
+    ast = parser.parser.parse(lexer.lexer.lex(program))
+    print ast.eval()

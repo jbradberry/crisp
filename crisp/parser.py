@@ -1,80 +1,93 @@
-from rpython.rlib import rstring
+from rply.token import BaseBox
+from rply import ParserGenerator
+
+from .lexer import lexer
 
 
-def tokenize(s):
-    s = rstring.replace(s, '(', ' ( ')
-    s = rstring.replace(s, ')', ' ) ')
-    return rstring.split(s)
-
-
-class Node(object):
+class Atom(BaseBox):
     pass
 
 
-class Int(Node):
+class Int(Atom):
     def __init__(self, value):
         self.value = value
 
-    def render(self):
-        return "Int(%d)" % self.value
+    def eval(self):
+        return "Int<%d>" % self.value
 
 
-class Float(Node):
+class Float(Atom):
     def __init__(self, value):
         self.value = value
 
-    def render(self):
-        return "Float(%f)" % self.value
+    def eval(self):
+        return "Float<%f>" % self.value
 
 
-class Symbol(Node):
+class String(Atom):
     def __init__(self, value):
         self.value = value
 
-    def render(self):
-        return "Symbol(%s)" % self.value
+    def eval(self):
+        return "String<'%s'>" % self.value
 
 
-def dispatch_atom(value):
-    try:
-        int_value = int(value)
-        return Int(int_value)
-    except:
-        pass
+class Symbol(Atom):
+    def __init__(self, value):
+        self.value = value
 
-    try:
-        float_value = float(value)
-        return Float(float_value)
-    except:
-        pass
-
-    return Symbol(value)
+    def eval(self):
+        return "Symbol<%s>" % self.value
 
 
-class List(Node):
+class List(BaseBox):
     def __init__(self, children):
         self.children = children
 
-    def render(self):
-        values = [node.render() for node in self.children]
-        return "List(%s)" % (', '.join(values))
+    def eval(self):
+        return "[%s]" % " ".join([item.eval() for item in self.contents()])
+
+    def contents(self):
+        return self.children
 
 
-def build_ast(tokens):
-    if len(tokens) == 0:
-        raise SyntaxError('unexpected EOF while reading')
-    token = tokens.pop(0)
-    if token == '(':
-        L = []
-        while tokens[0] != ')':
-            L.append(build_ast(tokens))
-        tokens.pop(0)  # pop off ')'
-        return List(L)
-    elif token == ')':
-        raise SyntaxError('unexpected )')
-    else:
-        return dispatch_atom(token)
+pg = ParserGenerator(
+    ['LPAREN', 'RPAREN', 'FLOAT', 'INTEGER', 'STRING', 'SYMBOL'],
+)
 
 
-def parse(program):
-    return build_ast(tokenize(program))
+@pg.production('expression : FLOAT')
+def expression_float(p):
+    return Float(float(p[0].getstr()))
+
+
+@pg.production('expression : INTEGER')
+def expression_integer(p):
+    return Int(int(p[0].getstr()))
+
+
+@pg.production('expression : STRING')
+def expression_string(p):
+    return String(str(p[0].getstr()))
+
+
+@pg.production('expression : SYMBOL')
+def expression_symbol(p):
+    return Symbol(str(p[0].getstr()))
+
+
+@pg.production('sequence :')
+@pg.production('sequence : sequence expression')
+def sequence(p):
+    if not p:
+        return List([])
+
+    return List(p[0].contents() + [p[1]])
+
+
+@pg.production('expression : LPAREN sequence RPAREN')
+def expression_list(p):
+    return List(p[1].contents())
+
+
+parser = pg.build()
